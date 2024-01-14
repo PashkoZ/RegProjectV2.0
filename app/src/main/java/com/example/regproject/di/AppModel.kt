@@ -1,7 +1,7 @@
 package com.example.regproject.di
 
 import com.example.regproject.data.AuthRepository
-import com.google.firebase.Firebase
+import com.example.regproject.data.AuthRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides

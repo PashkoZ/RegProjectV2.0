@@ -1,5 +1,6 @@
 package com.example.regproject.screens.logInScreen
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,20 +16,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,17 +42,22 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.regproject.R
 import com.example.regproject.screens.regScreen.isValidEmail
+import kotlinx.coroutines.launch
 
 @Composable
-fun SignInScreen(navController: NavController){
+fun SignInScreen(navController: NavController, viewModel: SignInViewModel = hiltViewModel()){
     var email by remember{ mutableStateOf(TextFieldValue())}
     var password by remember{ mutableStateOf(TextFieldValue())}
     var isPasswordVisible by remember{ mutableStateOf(false)}
     var isValidEmailVar by remember{ mutableStateOf(true)}
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val state = viewModel.signInState.collectAsState(initial = null)
 
 Column(horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
@@ -86,7 +96,7 @@ Column(horizontalAlignment = Alignment.CenterHorizontally,
                 Icon(icon , contentDescription = null)
             }
         })
-    Button(onClick = {}, modifier = Modifier.fillMaxWidth()){
+    Button(onClick = {scope.launch{viewModel.LoginUser(email.text, password.text) }}, modifier = Modifier.fillMaxWidth()){
         Text(text = "Log in")
     }
 
@@ -108,9 +118,28 @@ Column(horizontalAlignment = Alignment.CenterHorizontally,
         Text(text = "Log in with Google", modifier = Modifier.padding(6.dp))
     }
 
-    Text(text = "Don't have an account Google?", modifier = Modifier.clickable {navController.navigate("reg_screen")}.padding(8.dp))
+    Text(text = "Don't have an account Google?", modifier = Modifier
+        .clickable { navController.navigate("reg_screen") }
+        .padding(8.dp))
 
-}}
+    LaunchedEffect(key1 = state.value?.isSuccess){
+        scope.launch { if (state.value?.isSuccess?.isNotEmpty() == true){
+            val success = state.value?.isSuccess
+            Toast.makeText(context, "${success}", Toast.LENGTH_LONG).show()
+            navController.navigate("main_screen")
+        }
+        }
+    }
+    LaunchedEffect(key1 = state.value?.isError){
+        scope.launch { if (state.value?.isError?.isNotEmpty() == true){
+            val error = state.value?.isError
+            Toast.makeText(context, "${error}", Toast.LENGTH_LONG).show()
+        }
+        }
+    }
+}
+
+}
 
 @Preview(showBackground = true)
 @Composable
